@@ -33,6 +33,8 @@ string CatalogTypeToString(CatalogType type) {
 		return "Table Macro Function";
 	case CatalogType::VIEW_ENTRY:
 		return "View";
+	case CatalogType::MATVIEW_ENTRY:
+		return "Materialized View";
 	case CatalogType::INDEX_ENTRY:
 		return "Index";
 	case CatalogType::PREPARED_STATEMENT:

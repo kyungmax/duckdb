@@ -95,6 +95,10 @@ TEST_CASE("Test create_table", "[serialization]") {
 	test_helper("CREATE TABLE tbl (foo INTEGER)");
 }
 
+TEST_CASE("Test create_materialized_view", "[serialization]") {
+	test_helper("CREATE MATERIALIZED VIEW mview AS SELECT * FROM optimized_iceberg_scan('path/to/s3')");
+}
+
 TEST_CASE("Test insert_into", "[serialization]") {
 	test_helper("INSERT INTO tbl VALUES(1)", {"CREATE TABLE tbl (foo INTEGER)"});
 }
