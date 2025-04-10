@@ -13,7 +13,7 @@ unique_ptr<CreateStatement> Transformer::TransformCreateMatView(duckdb_libpgquer
 		throw NotImplementedException("Unimplemented features for CREATE MATERIALIZED VIEW");
 	}
 	const auto qualifiedName = TransformQualifiedName(*stmt.into->rel);
-	if (stmt.into->viewQuery->type != duckdb_libpgquery::T_PGSelectStmt) {
+	if (stmt.query->type != duckdb_libpgquery::T_PGSelectStmt) {
 		throw ParserException("CREATE MATERIALIZED VIEW requires a SELECT clause");
 	}
 	auto query = Transformer::TransformSelectStmt(*stmt.query, false);
