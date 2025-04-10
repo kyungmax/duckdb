@@ -1,9 +1,11 @@
 #include "duckdb/catalog/catalog.hpp"
+#include "duckdb/catalog/catalog_search_path.hpp"
+#include "duckdb/catalog/duck_catalog.hpp"
 #include "duckdb/catalog/catalog_entry/duck_table_entry.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
-#include "duckdb/catalog/catalog_search_path.hpp"
-#include "duckdb/catalog/duck_catalog.hpp"
+#include "duckdb/common/extension_type_info.hpp"
+#include "duckdb/common/type_visitor.hpp"
 #include "duckdb/function/scalar_macro_function.hpp"
 #include "duckdb/function/table/table_scan.hpp"
 #include "duckdb/main/attached_database.hpp"
@@ -12,6 +14,7 @@
 #include "duckdb/main/database.hpp"
 #include "duckdb/main/database_manager.hpp"
 #include "duckdb/main/secret/secret_manager.hpp"
+#include "duckdb/parser/parsed_expression_iterator.hpp"
 #include "duckdb/parser/constraints/foreign_key_constraint.hpp"
 #include "duckdb/parser/constraints/list.hpp"
 #include "duckdb/parser/constraints/unique_constraint.hpp"
@@ -22,7 +25,6 @@
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
 #include "duckdb/parser/parsed_data/create_secret_info.hpp"
 #include "duckdb/parser/parsed_data/create_view_info.hpp"
-#include "duckdb/parser/parsed_expression_iterator.hpp"
 #include "duckdb/parser/statement/create_statement.hpp"
 #include "duckdb/parser/tableref/basetableref.hpp"
 #include "duckdb/parser/tableref/table_function_ref.hpp"
@@ -35,14 +37,13 @@
 #include "duckdb/planner/expression_binder/select_binder.hpp"
 #include "duckdb/planner/operator/logical_create.hpp"
 #include "duckdb/planner/operator/logical_create_table.hpp"
+#include "duckdb/planner/operator/logical_create_matview.hpp"
 #include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/operator/logical_projection.hpp"
 #include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
 #include "duckdb/planner/tableref/bound_basetableref.hpp"
 #include "duckdb/storage/storage_extension.hpp"
-#include "duckdb/common/extension_type_info.hpp"
-#include "duckdb/common/type_visitor.hpp"
 
 namespace duckdb {
 
@@ -479,6 +480,21 @@ BoundStatement Binder::Bind(CreateStatement &stmt) {
 			create_table->children.push_back(std::move(root));
 		}
 		result.plan = std::move(create_table);
+		break;
+	}
+	case CatalogType::MATVIEW_ENTRY: {
+		auto bound_info = BindCreateTableInfo(std::move(stmt.info));
+		auto root = std::move(bound_info->query);
+
+		// create the logical operator
+		auto &schema = bound_info->schema;
+		auto create_matview = make_uniq<LogicalCreateMatView>(schema, std::move(bound_info));
+		if (root) {
+			// CREATE TABLE AS
+			properties.return_type = StatementReturnType::CHANGED_ROWS;
+			create_matview->children.push_back(std::move(root));
+		}
+		result.plan = std::move(create_matview);
 		break;
 	}
 	case CatalogType::TYPE_ENTRY: {

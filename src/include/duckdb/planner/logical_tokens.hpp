@@ -20,6 +20,7 @@ class LogicalCopyDatabase;
 class LogicalCopyToFile;
 class LogicalCreate;
 class LogicalCreateTable;
+class LogicalCreateMatView;
 class LogicalCreateIndex;
 class LogicalCreateTable;
 class LogicalCreateSecret;
