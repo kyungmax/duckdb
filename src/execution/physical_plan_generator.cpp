@@ -135,6 +135,7 @@ PhysicalOperator &PhysicalPlanGenerator::CreatePlan(LogicalOperator &op) {
 	case LogicalOperatorType::LOGICAL_EXECUTE:
 		return CreatePlan(op.Cast<LogicalExecute>());
 	case LogicalOperatorType::LOGICAL_CREATE_VIEW:
+	case LogicalOperatorType::LOGICAL_CREATE_MATVIEW:
 	case LogicalOperatorType::LOGICAL_CREATE_SEQUENCE:
 	case LogicalOperatorType::LOGICAL_CREATE_SCHEMA:
 	case LogicalOperatorType::LOGICAL_CREATE_MACRO:
