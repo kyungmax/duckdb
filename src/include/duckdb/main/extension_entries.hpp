@@ -204,6 +204,7 @@ static constexpr ExtensionFunctionEntry EXTENSION_FUNCTIONS[] = {
     {"html_escape", "inet", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"html_unescape", "inet", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"iceberg_metadata", "iceberg", CatalogType::TABLE_FUNCTION_ENTRY},
+    {"iceberg_table", "iceberg", CatalogType::TABLE_FUNCTION_ENTRY},
     {"iceberg_scan", "iceberg", CatalogType::TABLE_FUNCTION_ENTRY},
     {"optimized_iceberg_scan", "iceberg", CatalogType::TABLE_FUNCTION_ENTRY},
     {"iceberg_snapshots", "iceberg", CatalogType::TABLE_FUNCTION_ENTRY},
