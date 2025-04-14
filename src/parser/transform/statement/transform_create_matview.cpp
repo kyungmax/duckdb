@@ -13,7 +13,7 @@ unique_ptr<CreateStatement> Transformer::TransformCreateMatView(duckdb_libpgquer
 	}
 
 	auto result = make_uniq<CreateStatement>();
-	auto info = make_uniq<CreateViewInfo>();
+	auto info = make_uniq<CreateMatViewInfo>();
 
 	auto qname = TransformQualifiedName(*stmt.view);
 	info->catalog = qname.catalog;

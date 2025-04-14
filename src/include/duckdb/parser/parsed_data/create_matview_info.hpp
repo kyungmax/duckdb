@@ -5,7 +5,8 @@
 namespace duckdb {
 
 struct CreateMatViewInfo : CreateViewInfo {
-	CreateMatViewInfo() : CreateViewInfo(CatalogType::MATVIEW_ENTRY) {
+	CreateMatViewInfo() : CreateViewInfo() {
+		this->type = CatalogType::MATVIEW_ENTRY;
 	}
 };
 
