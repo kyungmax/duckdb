@@ -1,10 +1,10 @@
 #pragma once
 
-#include "duckdb/parser/parsed_data/create_table_info.hpp"
+#include "create_view_info.hpp"
 
 namespace duckdb {
 
-struct CreateMatViewInfo : CreateTableInfo {
+struct CreateMatViewInfo : CreateViewInfo {
 	CreateMatViewInfo() {
 		this->type = CatalogType::MATVIEW_ENTRY;
 	}

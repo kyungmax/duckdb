@@ -25,6 +25,7 @@
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
 #include "duckdb/parser/parsed_data/create_secret_info.hpp"
 #include "duckdb/parser/parsed_data/create_view_info.hpp"
+#include "duckdb/parser/parsed_data/create_matview_info.hpp"
 #include "duckdb/parser/statement/create_statement.hpp"
 #include "duckdb/parser/tableref/basetableref.hpp"
 #include "duckdb/parser/tableref/table_function_ref.hpp"
@@ -37,7 +38,6 @@
 #include "duckdb/planner/expression_binder/select_binder.hpp"
 #include "duckdb/planner/operator/logical_create.hpp"
 #include "duckdb/planner/operator/logical_create_table.hpp"
-#include "duckdb/planner/operator/logical_create_matview.hpp"
 #include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/operator/logical_projection.hpp"
 #include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
@@ -420,6 +420,15 @@ BoundStatement Binder::Bind(CreateStatement &stmt) {
 		result.plan = make_uniq<LogicalCreate>(LogicalOperatorType::LOGICAL_CREATE_VIEW, std::move(stmt.info), &schema);
 		break;
 	}
+	case CatalogType::MATVIEW_ENTRY: {
+		auto &base = stmt.info->Cast<CreateMatViewInfo>();
+		// bind the schema
+		auto &schema = BindCreateSchema(*stmt.info);
+		BindCreateViewInfo(base);
+		result.plan =
+		    make_uniq<LogicalCreate>(LogicalOperatorType::LOGICAL_CREATE_MATVIEW, std::move(stmt.info), &schema);
+		break;
+	}
 	case CatalogType::SEQUENCE_ENTRY: {
 		auto &schema = BindCreateSchema(*stmt.info);
 		result.plan =
@@ -480,21 +489,6 @@ BoundStatement Binder::Bind(CreateStatement &stmt) {
 			create_table->children.push_back(std::move(root));
 		}
 		result.plan = std::move(create_table);
-		break;
-	}
-	case CatalogType::MATVIEW_ENTRY: {
-		auto bound_info = BindCreateTableInfo(std::move(stmt.info));
-		auto root = std::move(bound_info->query);
-
-		// create the logical operator
-		auto &schema = bound_info->schema;
-		auto create_matview = make_uniq<LogicalCreateMatView>(schema, std::move(bound_info));
-		if (root) {
-			// CREATE TABLE AS
-			properties.return_type = StatementReturnType::CHANGED_ROWS;
-			create_matview->children.push_back(std::move(root));
-		}
-		result.plan = std::move(create_matview);
 		break;
 	}
 	case CatalogType::TYPE_ENTRY: {

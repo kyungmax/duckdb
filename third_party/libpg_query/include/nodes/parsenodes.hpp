@@ -1900,6 +1900,13 @@ typedef struct PGViewStmt {
 } PGViewStmt;
 
 /* ----------------------
+ * CREATE MATERIALIZED VIEW Statement
+ * ----------------------
+ */
+typedef struct PGCreateMatViewStmt : PGViewStmt {
+} PGCreateMatViewStmt;
+
+/* ----------------------
  *		Load Statement
  * ----------------------
  */
@@ -1987,13 +1994,6 @@ typedef struct PGCreateTableAsStmt {
 	bool is_select_into;  /* it was written as SELECT INTO */
 	PGOnCreateConflict onconflict;        /* what to do on create conflict */
 } PGCreateTableAsStmt;
-
-/* ----------------------
- * CREATE MATERIALIZED VIEW Statement
- * ----------------------
- */
-typedef struct PGCreateMatViewStmt : PGCreateTableAsStmt {
-} PGCreateMatViewStmt;
 
 /* ----------------------
  * Checkpoint Statement
