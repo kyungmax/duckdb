@@ -17,6 +17,7 @@ class SchemaCatalogEntry;
 struct CreateViewInfo : public CreateInfo {
 public:
 	CreateViewInfo();
+	CreateViewInfo(CatalogType type);
 	CreateViewInfo(SchemaCatalogEntry &schema, string view_name);
 	CreateViewInfo(string catalog_p, string schema_p, string view_name);
 
