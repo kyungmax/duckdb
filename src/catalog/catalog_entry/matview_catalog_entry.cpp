@@ -27,6 +27,23 @@ MatViewCatalogEntry::MatViewCatalogEntry(Catalog &catalog, SchemaCatalogEntry &s
 	Initialize(info);
 }
 
+unique_ptr<CreateInfo> MatViewCatalogEntry::GetInfo() const {
+	auto result = make_uniq<CreateMatViewInfo>();
+	result->schema = schema.name;
+	result->view_name = name;
+	result->sql = sql;
+	result->query = query ? unique_ptr_cast<SQLStatement, SelectStatement>(query->Copy()) : nullptr;
+	result->aliases = aliases;
+	result->names = names;
+	result->types = types;
+	result->temporary = temporary;
+	result->dependencies = dependencies;
+	result->comment = comment;
+	result->tags = tags;
+	result->column_comments = column_comments;
+	return std::move(result);
+}
+
 string MatViewCatalogEntry::ToSQL() const {
 	if (sql.empty()) {
 		//! Return empty sql with view name so pragma view_tables don't complain
@@ -36,4 +53,16 @@ string MatViewCatalogEntry::ToSQL() const {
 	auto result = info->ToString();
 	return result;
 }
+
+const SelectStatement &MatViewCatalogEntry::GetQuery() {
+	return *query;
+}
+
+unique_ptr<CatalogEntry> MatViewCatalogEntry::Copy(ClientContext &context) const {
+	D_ASSERT(!internal);
+	auto create_info = GetInfo();
+
+	return make_uniq<MatViewCatalogEntry>(catalog, schema, create_info->Cast<CreateMatViewInfo>());
+}
+
 } // namespace duckdb

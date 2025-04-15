@@ -683,6 +683,12 @@ void BindContext::AddView(idx_t index, const string &alias, SubqueryRef &ref, Bo
 	AddEntryBinding(index, alias, names, subquery.types, view.Cast<StandardEntry>());
 }
 
+void BindContext::AddMatView(idx_t index, const string &alias, SubqueryRef &ref, BoundQueryNode &subquery,
+			  MatViewCatalogEntry &matview) {
+	auto names = AliasColumnNames(alias, subquery.names, ref.column_name_alias);
+	AddEntryBinding(index, alias, names, subquery.types, matview.Cast<StandardEntry>());
+}
+
 void BindContext::AddSubquery(idx_t index, const string &alias, TableFunctionRef &ref, BoundQueryNode &subquery) {
 	auto names = AliasColumnNames(alias, subquery.names, ref.column_name_alias);
 	AddGenericBinding(index, alias, names, subquery.types);

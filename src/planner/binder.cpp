@@ -3,6 +3,7 @@
 #include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/view_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/matview_catalog_entry.hpp"
 #include "duckdb/common/enum_util.hpp"
 #include "duckdb/common/helper.hpp"
 #include "duckdb/main/config.hpp"
@@ -520,6 +521,18 @@ void Binder::AddBoundView(ViewCatalogEntry &view) {
 		current = current->parent.get();
 	}
 	bound_views.insert(view);
+}
+
+void Binder::AddBoundMatView(MatViewCatalogEntry &matview) {
+	// check if the view is already bound
+	auto current = this;
+	while (current) {
+		if (current->bound_matviews.find(matview) != current->bound_matviews.end()) {
+			throw BinderException("infinite recursion detected: attempting to recursively bind matview \"%s\"", matview.name);
+		}
+		current = current->parent.get();
+	}
+	bound_matviews.insert(matview);
 }
 
 idx_t Binder::GenerateTableIndex() {

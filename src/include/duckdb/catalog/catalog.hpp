@@ -52,6 +52,7 @@ class CollateCatalogEntry;
 class SchemaCatalogEntry;
 class TableCatalogEntry;
 class ViewCatalogEntry;
+class MatViewCatalogEntry;
 class SequenceCatalogEntry;
 class TableFunctionCatalogEntry;
 class CopyFunctionCatalogEntry;

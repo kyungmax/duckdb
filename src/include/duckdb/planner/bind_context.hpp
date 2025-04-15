@@ -103,6 +103,8 @@ public:
 	                      optional_ptr<StandardEntry> entry, virtual_column_map_t virtual_columns);
 	//! Adds a table view with a given alias to the BindContext.
 	void AddView(idx_t index, const string &alias, SubqueryRef &ref, BoundQueryNode &subquery, ViewCatalogEntry &view);
+	//! Adds a table view with a given alias to the BindContext.
+	void AddMatView(idx_t index, const string &alias, SubqueryRef &ref, BoundQueryNode &subquery, MatViewCatalogEntry &matview);
 	//! Adds a subquery with a given alias to the BindContext.
 	void AddSubquery(idx_t index, const string &alias, SubqueryRef &ref, BoundQueryNode &subquery);
 	//! Adds a subquery with a given alias to the BindContext.

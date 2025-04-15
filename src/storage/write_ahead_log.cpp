@@ -21,6 +21,8 @@
 #include "duckdb/storage/table_io_manager.hpp"
 #include "duckdb/storage/storage_manager.hpp"
 
+#include <duckdb/catalog/catalog_entry/matview_catalog_entry.hpp>
+
 namespace duckdb {
 
 constexpr uint64_t WAL_VERSION_NUMBER = 2;
@@ -352,6 +354,22 @@ void WriteAheadLog::WriteCreateView(const ViewCatalogEntry &entry) {
 
 void WriteAheadLog::WriteDropView(const ViewCatalogEntry &entry) {
 	WriteAheadLogSerializer serializer(*this, WALType::DROP_VIEW);
+	serializer.WriteProperty(101, "schema", entry.schema.name);
+	serializer.WriteProperty(102, "name", entry.name);
+	serializer.End();
+}
+
+//===--------------------------------------------------------------------===//
+// MATVIEWS
+//===--------------------------------------------------------------------===//
+void WriteAheadLog::WriteCreateMatView(const MatViewCatalogEntry &entry) {
+	WriteAheadLogSerializer serializer(*this, WALType::CREATE_MATVIEW);
+	serializer.WriteProperty(101, "matview", &entry);
+	serializer.End();
+}
+
+void WriteAheadLog::WriteDropMatView(const MatViewCatalogEntry &entry) {
+	WriteAheadLogSerializer serializer(*this, WALType::DROP_MATVIEW);
 	serializer.WriteProperty(101, "schema", entry.schema.name);
 	serializer.WriteProperty(102, "name", entry.name);
 	serializer.End();

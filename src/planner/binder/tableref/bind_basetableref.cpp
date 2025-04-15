@@ -20,6 +20,8 @@
 #include "duckdb/planner/tableref/bound_at_clause.hpp"
 #include "duckdb/execution/expression_executor.hpp"
 
+#include <duckdb/catalog/catalog_entry/matview_catalog_entry.hpp>
+
 namespace duckdb {
 
 static bool TryLoadExtensionForReplacementScan(ClientContext &context, const string &table_name) {
@@ -380,6 +382,67 @@ unique_ptr<BoundTableRef> Binder::Bind(BaseTableRef &ref) {
 		}
 		bind_context.AddView(bound_subquery.subquery->GetRootIndex(), subquery.alias, subquery,
 		                     *bound_subquery.subquery, view_catalog_entry);
+		return bound_child;
+	}
+	case CatalogType::MATVIEW_ENTRY: {
+		// the node is a view: get the query that the view represents
+		auto &mat_view_catalog_entry = table_or_view->Cast<MatViewCatalogEntry>();
+		// We need to use a new binder for the view that doesn't reference any CTEs
+		// defined for this binder so there are no collisions between the CTEs defined
+		// for the view and for the current query
+		auto view_binder = Binder::CreateBinder(context, this, BinderType::VIEW_BINDER);
+		view_binder->can_contain_nulls = true;
+		SubqueryRef subquery(unique_ptr_cast<SQLStatement, SelectStatement>(mat_view_catalog_entry.GetQuery().Copy()));
+		subquery.alias = ref.alias;
+		// construct view names by first (1) taking the view aliases, (2) adding the view names, then (3) applying
+		// subquery aliases
+		vector<string> view_names = mat_view_catalog_entry.aliases;
+		for (idx_t n = view_names.size(); n < mat_view_catalog_entry.names.size(); n++) {
+			view_names.push_back(mat_view_catalog_entry.names[n]);
+		}
+		subquery.column_name_alias = BindContext::AliasColumnNames(ref.table_name, view_names, ref.column_name_alias);
+
+		// when binding a view, we always look into the catalog/schema where the view is stored first
+		auto view_search_path =
+		    GetSearchPath(mat_view_catalog_entry.ParentCatalog(), mat_view_catalog_entry.ParentSchema().name);
+		view_binder->entry_retriever.SetSearchPath(std::move(view_search_path));
+		// propagate the AT clause through the view
+		view_binder->entry_retriever.SetAtClause(entry_at_clause);
+
+		// bind the child subquery
+		view_binder->AddBoundMatView(mat_view_catalog_entry);
+		auto bound_child = view_binder->Bind(subquery);
+		if (!view_binder->correlated_columns.empty()) {
+			throw BinderException("Contents of view were altered - view bound correlated columns");
+		}
+
+		D_ASSERT(bound_child->type == TableReferenceType::SUBQUERY);
+		// verify that the types and names match up with the expected types and names if the view has type info defined
+		auto &bound_subquery = bound_child->Cast<BoundSubqueryRef>();
+		if (GetBindingMode() != BindingMode::EXTRACT_NAMES && mat_view_catalog_entry.HasTypes()) {
+			// we bind the view subquery and the original view with different "can_contain_nulls",
+			// but we don't want to throw an error when SQLNULL does not match up with INTEGER,
+			// so we exchange all SQLNULL with INTEGER here before comparing
+			auto bound_types = ExchangeAllNullTypes(bound_subquery.subquery->types);
+			auto view_types = ExchangeAllNullTypes(mat_view_catalog_entry.types);
+			if (bound_types != view_types) {
+				auto actual_types = StringUtil::ToString(bound_types, ", ");
+				auto expected_types = StringUtil::ToString(view_types, ", ");
+				throw BinderException(
+				    "Contents of view were altered: types don't match! Expected [%s], but found [%s] instead",
+				    expected_types, actual_types);
+			}
+			if (bound_subquery.subquery->names.size() == mat_view_catalog_entry.names.size() &&
+			    bound_subquery.subquery->names != mat_view_catalog_entry.names) {
+				auto actual_names = StringUtil::Join(bound_subquery.subquery->names, ", ");
+				auto expected_names = StringUtil::Join(mat_view_catalog_entry.names, ", ");
+				throw BinderException(
+				    "Contents of view were altered: names don't match! Expected [%s], but found [%s] instead",
+				    expected_names, actual_names);
+			}
+		}
+		bind_context.AddMatView(bound_subquery.subquery->GetRootIndex(), subquery.alias, subquery,
+		                        *bound_subquery.subquery, mat_view_catalog_entry);
 		return bound_child;
 	}
 	default:
