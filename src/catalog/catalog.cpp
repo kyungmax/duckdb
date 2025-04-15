@@ -164,6 +164,24 @@ optional_ptr<CatalogEntry> Catalog::CreateView(CatalogTransaction transaction, S
 }
 
 //===--------------------------------------------------------------------===//
+// Materialized View
+//===--------------------------------------------------------------------===//
+
+optional_ptr<CatalogEntry> Catalog::CreateMatView(const CatalogTransaction &transaction, CreateMatViewInfo &info) {
+	auto &schema = GetSchema(transaction, info.schema);
+	return CreateMatView(transaction, schema, info);
+}
+
+optional_ptr<CatalogEntry> Catalog::CreateMatView(ClientContext &context, CreateMatViewInfo &info) {
+	return CreateMatView(GetCatalogTransaction(context), info);
+}
+
+optional_ptr<CatalogEntry> Catalog::CreateMatView(const CatalogTransaction &transaction, SchemaCatalogEntry &schema,
+                                                  CreateMatViewInfo &info) {
+	return schema.CreateMatView(transaction, info);
+}
+
+//===--------------------------------------------------------------------===//
 // Sequence
 //===--------------------------------------------------------------------===//
 optional_ptr<CatalogEntry> Catalog::CreateSequence(CatalogTransaction transaction, CreateSequenceInfo &info) {

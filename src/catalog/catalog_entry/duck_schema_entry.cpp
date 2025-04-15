@@ -40,6 +40,8 @@
 #include "duckdb/transaction/duck_transaction.hpp"
 #include "duckdb/transaction/meta_transaction.hpp"
 
+#include <duckdb/catalog/catalog_entry/matview_catalog_entry.hpp>
+
 namespace duckdb {
 
 static void FindForeignKeyInformation(TableCatalogEntry &table, AlterForeignKeyType alter_fk_type,
@@ -232,6 +234,11 @@ optional_ptr<CatalogEntry> DuckSchemaEntry::CreateView(CatalogTransaction transa
 	return AddEntry(transaction, std::move(view), info.on_conflict);
 }
 
+optional_ptr<CatalogEntry> DuckSchemaEntry::CreateMatView(CatalogTransaction transaction, CreateMatViewInfo &info) {
+	auto matview = make_uniq<MatViewCatalogEntry>(catalog, *this, info);
+	return AddEntry(transaction, std::move(matview), info.on_conflict);
+}
+
 optional_ptr<CatalogEntry> DuckSchemaEntry::CreateIndex(CatalogTransaction transaction, CreateIndexInfo &info,
                                                         TableCatalogEntry &table) {
 	info.dependencies.AddDependency(table);
@@ -365,6 +372,7 @@ SimilarCatalogEntry DuckSchemaEntry::GetSimilarEntry(CatalogTransaction transact
 
 CatalogSet &DuckSchemaEntry::GetCatalogSet(CatalogType type) {
 	switch (type) {
+	case CatalogType::MATVIEW_ENTRY:
 	case CatalogType::VIEW_ENTRY:
 	case CatalogType::TABLE_ENTRY:
 		return tables;
