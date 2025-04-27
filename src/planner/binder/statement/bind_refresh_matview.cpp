@@ -17,7 +17,7 @@ BoundStatement Binder::Bind(RefreshMatViewStatement &stmt) {
 	    Catalog::GetEntry<MatViewCatalogEntry>(context, refresh_matview_info.catalog, refresh_matview_info.schema,
 	                                           refresh_matview_info.table, OnEntryNotFound::RETURN_NULL);
 	if (!entry) {
-		throw CatalogException("Materialized view %s.%s does not exist!", refresh_matview_info.schema, matview_name);
+		throw CatalogException("Materialized view %s does not exist!", matview_name);
 	}
 	auto column_names = entry->GetColumns().GetColumnNames();
 	auto column_types = entry->GetColumns().GetColumnTypes();
