@@ -26,6 +26,7 @@ add_library_unity(
   in_clause_rewriter.cpp
   join_filter_pushdown_optimizer.cpp
   late_materialization.cpp
+  matview_optimizer.cpp
   optimizer.cpp
   regex_range_filter.cpp
   remove_duplicate_groups.cpp

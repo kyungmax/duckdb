@@ -17,5 +17,6 @@ public:
 
 public:
 	unique_ptr<LogicalOperator> query;
+	string base_table_name;
 };
 } // namespace duckdb

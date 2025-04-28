@@ -19,6 +19,7 @@
 #include "duckdb/optimizer/join_filter_pushdown_optimizer.hpp"
 #include "duckdb/optimizer/join_order/join_order_optimizer.hpp"
 #include "duckdb/optimizer/limit_pushdown.hpp"
+#include "duckdb/optimizer/matview_optimizer.hpp"
 #include "duckdb/optimizer/regex_range_filter.hpp"
 #include "duckdb/optimizer/remove_duplicate_groups.hpp"
 #include "duckdb/optimizer/remove_unused_columns.hpp"
@@ -264,6 +265,12 @@ void Optimizer::RunBuiltInOptimizers() {
 	RunOptimizer(OptimizerType::JOIN_FILTER_PUSHDOWN, [&]() {
 		JoinFilterPushdownOptimizer join_filter_pushdown(*this);
 		join_filter_pushdown.VisitOperator(*plan);
+	});
+
+	// change base table to mview
+	RunOptimizer(OptimizerType::MATERIALIZED_VIEW, [&]() {
+		MatViewOptimizer matview_optimizer(context, *this);
+		plan = matview_optimizer.Optimize(std::move(plan));
 	});
 }
 
