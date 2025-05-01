@@ -16,6 +16,7 @@
 
 namespace duckdb {
 struct MViewMetadata;
+struct MViewQueryInfo;
 class ClientContext;
 class Optimizer;
 
@@ -31,10 +32,11 @@ public:
 
 public:
 
-	unique_ptr<LogicalOperator> Optimize(unique_ptr<LogicalOperator> op);
+	unique_ptr<LogicalOperator> Optimize(unique_ptr<LogicalOperator> op, Binder &binder);
 
 private:
-	bool ifMatchingMViewExists(ClientContext &context, const MViewMetadata &mview);
+	CatalogEntry* getMatchingMView(ClientContext &context, const MViewMetadata &mview);
+	MViewQueryInfo ExtractMViewInfoFromLogicalPlan(LogicalOperator &op);
 };
 
 } // namespace duckdb

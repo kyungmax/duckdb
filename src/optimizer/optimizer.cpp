@@ -119,6 +119,12 @@ void Optimizer::RunBuiltInOptimizers() {
 	// this does not change the logical plan structure, but only simplifies the expression trees
 	RunOptimizer(OptimizerType::EXPRESSION_REWRITER, [&]() { rewriter.VisitOperator(*plan); });
 
+	// change base table to mview
+	RunOptimizer(OptimizerType::MATERIALIZED_VIEW, [&]() {
+		MatViewOptimizer matview_optimizer(context, *this);
+		plan = matview_optimizer.Optimize(std::move(plan), binder);
+	});
+
 	// Rewrites SUM(x + C) into SUM(x) + C * COUNT(x)
 	RunOptimizer(OptimizerType::SUM_REWRITER, [&]() {
 		SumRewriterOptimizer optimizer(*this);
@@ -265,12 +271,6 @@ void Optimizer::RunBuiltInOptimizers() {
 	RunOptimizer(OptimizerType::JOIN_FILTER_PUSHDOWN, [&]() {
 		JoinFilterPushdownOptimizer join_filter_pushdown(*this);
 		join_filter_pushdown.VisitOperator(*plan);
-	});
-
-	// change base table to mview
-	RunOptimizer(OptimizerType::MATERIALIZED_VIEW, [&]() {
-		MatViewOptimizer matview_optimizer(context, *this);
-		plan = matview_optimizer.Optimize(std::move(plan));
 	});
 }
 

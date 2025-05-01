@@ -18,5 +18,6 @@ public:
 public:
 	unique_ptr<LogicalOperator> query;
 	string base_table_name;
+	unique_ptr<CatalogEntry> Copy(ClientContext &context) const override;
 };
 } // namespace duckdb
